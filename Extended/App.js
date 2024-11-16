@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, SafeAreaView, KeyboardAvoidingView, Platform, Image, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useState, useEffect } from 'react';
-import { initDatabase, registerUser, loginUser } from './utils/database';
+import { initDatabase, registerUser, loginUser, updateUserProfile } from './utils/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -14,8 +14,8 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [address, setAddress] = useState('');
-  const [profilePicture, setProfilePicture] = useState('');
-  const [profilePictureUrl, setProfilePictureUrl] = useState('');
+  const [profilePicture, setProfilePicture] = useState(''); 
+  const [profilePictureUrl, setProfilePictureUrl] = useState(''); 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState({});
 
@@ -24,13 +24,15 @@ export default function App() {
     checkLoginStatus();
   }, []);
 
+ 
+
   const checkLoginStatus = async () => {
     const status = await AsyncStorage.getItem('isLoggedIn');
     if (status === 'true') {
       const savedUsername = await AsyncStorage.getItem('username');
       const savedPassword = await AsyncStorage.getItem('password');
       setUsername(savedUsername);
-      const userDetails = await loginUser(savedUsername, savedPassword);
+      const userDetails = await loginUser(savedUsername, savedPassword); 
       if (userDetails) {
         setUserData(userDetails);
         setIsLoggedIn(true);
@@ -46,12 +48,12 @@ export default function App() {
   
     try {
       if (isLogin) {
-        // Login functionality
+     
         const userDetails = await loginUser(username, password);
         if (userDetails) {
           await AsyncStorage.setItem('isLoggedIn', 'true');
           await AsyncStorage.setItem('username', username);
-          await AsyncStorage.setItem('password', password);
+          await AsyncStorage.setItem('password', password); 
           setUserData(userDetails);
           setIsLoggedIn(true);
           Alert.alert('Success', 'Logged in successfully');
@@ -59,14 +61,14 @@ export default function App() {
           Alert.alert('Error', 'Invalid credentials');
         }
       } else {
-        // Registration functionality
+       
         if (!firstName || !lastName || !email || !contactNumber || !address || (!profilePicture && !profilePictureUrl)) {
           Alert.alert('Error', 'Please fill in all registration fields');
           return;
         }
   
-        // Prepare the user data for registration
-        const user = {
+       
+        await registerUser({
           username,
           password,
           firstName,
@@ -74,13 +76,10 @@ export default function App() {
           email,
           contactNumber,
           address,
-          profilePicture: profilePicture || profilePictureUrl, // Choose the uploaded image or URL
-        };
+          profilePicture: profilePicture || profilePictureUrl, 
+        });
   
-        // Call registerUser to save the user data
-        await registerUser(user);
-  
-        // Clear input fields after registration
+
         setFirstName('');
         setLastName('');
         setEmail('');
@@ -90,49 +89,53 @@ export default function App() {
         setProfilePictureUrl('');
         setUsername('');
         setPassword('');
-  
+        
+      ;
+        
         Alert.alert('Success', 'Registration successful');
-        setIsLogin(true); // Switch to login screen after successful registration
+        setIsLogin(true);
       }
     } catch (error) {
       Alert.alert('Error', error.message);
     }
   };
+  
 
   const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem('isLoggedIn');
-      await AsyncStorage.removeItem('username');
-      await AsyncStorage.removeItem('password');
-
-      setIsLoggedIn(false);
-      setUserData({});
-      setUsername('');
-      setPassword('');
-
-      Alert.alert('Success', 'You have been logged out');
-    } catch (error) {
-      console.error('Error during logout:', error);
-      Alert.alert('Error', 'Failed to log out');
-    }
+    await AsyncStorage.removeItem('isLoggedIn');
+    await AsyncStorage.removeItem('username');
+    await AsyncStorage.removeItem('password'); 
+    setIsLoggedIn(false);
+    setUsername('');
+    setPassword('');
+    setUserData({});
   };
 
+ 
   const pickImage = async () => {
+   
     let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+
+  
+   
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
-
+  
+    
     if (pickerResult.canceled) {
       return;
     }
-
+  
+ 
     const selectedImageUri = pickerResult.assets[0].uri;
-    setProfilePicture(selectedImageUri);
-
+    setProfilePicture(selectedImageUri); 
+  
+   
     if (userData.id) {
       try {
         await updateUserProfile({
@@ -142,7 +145,7 @@ export default function App() {
           email: userData.email,
           contactNumber: userData.contactNumber,
           address: userData.address,
-          profilePicture: selectedImageUri,
+          profilePicture: selectedImageUri, 
         });
         Alert.alert('Success', 'Profile picture updated');
       } catch (error) {
@@ -152,6 +155,35 @@ export default function App() {
     }
   };
 
+  const handleEditProfile = () => {
+    setFirstName(userData.firstName);
+    setLastName(userData.lastName);
+    setEmail(userData.email);
+    setContactNumber(userData.contactNumber);
+    setAddress(userData.address);
+    setProfilePicture(userData.profilePicture);
+    setProfilePictureUrl(userData.profilePicture);
+    setIsLogin(false); // Switch to edit mode
+  };
+  
+  const handleSaveProfile = async () => {
+    try {
+      await updateUserProfile({
+        id: userData.id,
+        firstName,
+        lastName,
+        email,
+        contactNumber,
+        address,
+        profilePicture: profilePicture || profilePictureUrl,
+      });
+      setUserData({ ...userData, firstName, lastName, email, contactNumber, address, profilePicture: profilePicture || profilePictureUrl });
+      setIsLogin(true); // Switch back to profile view
+      Alert.alert('Success', 'Profile updated successfully');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update profile');
+    }
+  };
   const ProfilePage = () => {
     return (
       <SafeAreaView style={styles.container}>
@@ -164,18 +196,24 @@ export default function App() {
           <Text style={styles.subtitle}>Email: {userData?.email}</Text>
           <Text style={styles.subtitle}>Contact: {userData?.contactNumber}</Text>
           <Text style={styles.subtitle}>Address: {userData?.address}</Text>
-
+  
           <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
             <Text style={styles.buttonText}>Change Profile Picture</Text>
           </TouchableOpacity>
+  
+    
+          <TouchableOpacity style={styles.editButton} onPress={() => { /* Implement Edit Profile Logic Here */ }}>
+            <Text style={styles.buttonText}>Edit Profile</Text>
+          </TouchableOpacity>
         </View>
-
+  
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.buttonText}>Logout</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
   };
+  
 
   if (isLoggedIn) {
     return <ProfilePage />;
@@ -197,24 +235,27 @@ export default function App() {
                     <TextInput style={styles.input} placeholder="First Name" value={firstName} onChangeText={setFirstName} />
                     <TextInput style={styles.input} placeholder="Last Name" value={lastName} onChangeText={setLastName} />
                     <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} />
-                    <TextInput style={styles.input} placeholder="Contact Number" value={contactNumber} onChangeText={(text) => { if (/^\d{0,11}$/.test(text)) {setContactNumber(text);  } }} keyboardType="number-pad" maxLength={11} />
+                    <TextInput style={styles.input} placeholder="Contact Number"  value={contactNumber}onChangeText={(text) => { if (/^\d{0,11}$/.test(text)) {setContactNumber(text);  } }} keyboardType="number-pad"  maxLength={11} />
                     <TextInput style={styles.input} placeholder="Address" value={address} onChangeText={setAddress} />
 
                     {profilePicture && (
-                      <Text style={styles.uploadIndicator}>Profile picture uploaded!</Text>
-                    )}
-                    <View style={styles.profilePictureContainer}>
-                      <TextInput
-                        style={styles.urlInput}
-                        placeholder="Profile Picture URL (Optional)"
-                        value={profilePictureUrl}
-                        onChangeText={setProfilePictureUrl}
-                      />
-                      <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                        <Text style={styles.buttonText}>Upload Image</Text>
-                      </TouchableOpacity>
-                    </View>
+  <Text style={styles.uploadIndicator}>Profile picture uploaded!</Text>
+)}
+<View style={styles.profilePictureContainer}>
+  <TextInput
+    style={styles.urlInput} 
+    placeholder="Profile Picture URL (Optional)"
+    value={profilePictureUrl}
+    onChangeText={setProfilePictureUrl}
+  />
+  <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+    <Text style={styles.buttonText}>Upload Image</Text>
+  </TouchableOpacity>
+
+</View>
+
                   </>
+                  
                 )}
                 <TextInput
                   style={styles.input}
@@ -229,8 +270,9 @@ export default function App() {
                   value={password}
                   onChangeText={setPassword}
                 />
+                
               </View>
-
+           
               <TouchableOpacity style={styles.button} onPress={handleSubmit}>
                 <Text style={styles.buttonText}>{isLogin ? 'Login' : 'Register'}</Text>
               </TouchableOpacity>
@@ -239,6 +281,7 @@ export default function App() {
                   {isLogin ? 'Don’t have an account? Register' : 'Already have an account? Login'}
                 </Text>
               </TouchableOpacity>
+              
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
