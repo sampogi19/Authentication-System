@@ -24,8 +24,6 @@ export default function App() {
     checkLoginStatus();
   }, []);
 
- 
-
   const checkLoginStatus = async () => {
     const status = await AsyncStorage.getItem('isLoggedIn');
     if (status === 'true') {
@@ -154,36 +152,6 @@ export default function App() {
       }
     }
   };
-
-  const handleEditProfile = () => {
-    setFirstName(userData.firstName);
-    setLastName(userData.lastName);
-    setEmail(userData.email);
-    setContactNumber(userData.contactNumber);
-    setAddress(userData.address);
-    setProfilePicture(userData.profilePicture);
-    setProfilePictureUrl(userData.profilePicture);
-    setIsLogin(false); // Switch to edit mode
-  };
-  
-  const handleSaveProfile = async () => {
-    try {
-      await updateUserProfile({
-        id: userData.id,
-        firstName,
-        lastName,
-        email,
-        contactNumber,
-        address,
-        profilePicture: profilePicture || profilePictureUrl,
-      });
-      setUserData({ ...userData, firstName, lastName, email, contactNumber, address, profilePicture: profilePicture || profilePictureUrl });
-      setIsLogin(true); // Switch back to profile view
-      Alert.alert('Success', 'Profile updated successfully');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
-    }
-  };
   const ProfilePage = () => {
     return (
       <SafeAreaView style={styles.container}>
@@ -201,7 +169,7 @@ export default function App() {
             <Text style={styles.buttonText}>Change Profile Picture</Text>
           </TouchableOpacity>
   
-    
+          {/* Edit Button Below the Change Profile Picture */}
           <TouchableOpacity style={styles.editButton} onPress={() => { /* Implement Edit Profile Logic Here */ }}>
             <Text style={styles.buttonText}>Edit Profile</Text>
           </TouchableOpacity>
@@ -213,7 +181,6 @@ export default function App() {
       </SafeAreaView>
     );
   };
-  
 
   if (isLoggedIn) {
     return <ProfilePage />;
@@ -357,6 +324,20 @@ const styles = StyleSheet.create({
       shadowOpacity: 0.3,
       shadowRadius: 5,
     },
+    editButton: {
+      backgroundColor: '#3498db',  // Blue color
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: 55,
+      marginTop: 15, // Space between buttons
+      shadowColor: '#2980b9',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 5,
+    },
     buttonText: {
       color: '#fff',
       fontSize: 18,
@@ -383,20 +364,7 @@ const styles = StyleSheet.create({
       shadowOpacity: 0.3,
       shadowRadius: 5,
     },
-    editButton: {
-        backgroundColor: '#3498db',  // Blue color
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: 55,
-        marginTop: 15, // Space between buttons
-        shadowColor: '#2980b9',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-      },
+
     profilePictureContainer: {
       width: '100%',
       flexDirection: 'row',
@@ -477,3 +445,4 @@ const styles = StyleSheet.create({
     },
   });
   
+
