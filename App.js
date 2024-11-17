@@ -152,35 +152,128 @@ export default function App() {
       }
     }
   };
+
+  
   const ProfilePage = () => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editableFirstName, setEditableFirstName] = useState(userData.firstName);
+    const [editableLastName, setEditableLastName] = useState(userData.lastName);
+    const [editableEmail, setEditableEmail] = useState(userData.email);
+    const [editableContactNumber, setEditableContactNumber] = useState(userData.contactNumber);
+    const [editableAddress, setEditableAddress] = useState(userData.address);
+  
+    const handleEditProfile = () => {
+      setIsEditing(!isEditing);
+    };
+  
+    const handleSaveProfile = async () => {
+      try {
+        await updateUserProfile({
+          id: userData.id,
+          firstName: editableFirstName,
+          lastName: editableLastName,
+          email: editableEmail,
+          contactNumber: editableContactNumber,
+          address: editableAddress,
+          profilePicture: userData.profilePicture, 
+        });
+    
+        setUserData({
+          ...userData,
+          firstName: editableFirstName,
+          lastName: editableLastName,
+          email: editableEmail,
+          contactNumber: editableContactNumber,
+          address: editableAddress,
+        });
+        setIsEditing(false); 
+        Alert.alert('Success', 'Profile updated successfully');
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        Alert.alert('Error', 'Failed to update profile');
+      }
+    };
+  
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.loggedInContainer}>
-          <Image
-            source={userData?.profilePicture ? { uri: userData.profilePicture } : require('./assets/avatar.png')}
-            style={styles.avatar}
-          />
-          <Text style={styles.welcomeTitle}>Welcome, {userData?.firstName} {userData?.lastName}!</Text>
-          <Text style={styles.subtitle}>Email: {userData?.email}</Text>
-          <Text style={styles.subtitle}>Contact: {userData?.contactNumber}</Text>
-          <Text style={styles.subtitle}>Address: {userData?.address}</Text>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <View style={styles.loggedInContainer}>
+            <Image
+              source={userData?.profilePicture ? { uri: userData.profilePicture } : require('./assets/avatar.png')}
+              style={styles.avatar}
+            />
+            <Text style={styles.welcomeTitle}>Welcome, {userData?.firstName} {userData?.lastName}!</Text>
   
-          <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-            <Text style={styles.buttonText}>Change Profile Picture</Text>
+       
+            {isEditing ? (
+              <>
+                <TextInput
+                  style={styles.input}
+                  value={editableFirstName}
+                  onChangeText={setEditableFirstName}
+                  placeholder="First Name"
+                />
+                <TextInput
+                  style={styles.input}
+                  value={editableLastName}
+                  onChangeText={setEditableLastName}
+                  placeholder="Last Name"
+                />
+                <TextInput
+                  style={styles.input}
+                  value={editableEmail}
+                  onChangeText={setEditableEmail}
+                  placeholder="Email"
+                />
+                <TextInput
+                style={styles.input}
+                value={editableContactNumber}
+                onChangeText={(text) => {
+              
+                  if (text.length <= 11 && /^[0-9]*$/.test(text)) {
+                    setEditableContactNumber(text);
+                  }
+                }}
+                placeholder="Contact Number"
+              />
+                <TextInput
+                  style={styles.input}
+                  value={editableAddress}
+                  onChangeText={setEditableAddress}
+                  placeholder="Address"
+                />
+              </>
+            ) : (
+              <>
+                <Text style={styles.subtitle}>Email: {userData?.email}</Text>
+                <Text style={styles.subtitle}>Contact: {userData?.contactNumber}</Text>
+                <Text style={styles.subtitle}>Address: {userData?.address}</Text>
+              </>
+            )}
+  
+            <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+              <Text style={styles.buttonText}>Change Profile Picture</Text>
+            </TouchableOpacity>
+  
+            <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+              <Text style={styles.buttonText}>{isEditing ? 'Cancel' : 'Edit Profile'}</Text>
+            </TouchableOpacity>
+  
+            {isEditing && (
+              <TouchableOpacity style={styles.saveButton} onPress={handleSaveProfile}>
+                <Text style={styles.buttonText}>Save Changes</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+  
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
-  
-          {/* Edit Button Below the Change Profile Picture */}
-          <TouchableOpacity style={styles.editButton} onPress={() => { /* Implement Edit Profile Logic Here */ }}>
-            <Text style={styles.buttonText}>Edit Profile</Text>
-          </TouchableOpacity>
-        </View>
-  
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.buttonText}>Logout</Text>
-        </TouchableOpacity>
+        </ScrollView>
       </SafeAreaView>
     );
   };
+  
 
   if (isLoggedIn) {
     return <ProfilePage />;
@@ -324,15 +417,29 @@ const styles = StyleSheet.create({
       shadowOpacity: 0.3,
       shadowRadius: 5,
     },
-    editButton: {
-      backgroundColor: '#3498db',  // Blue color
+    saveButton: {
+      backgroundColor: '#FC8F54', 
       paddingVertical: 12,
       paddingHorizontal: 20,
       borderRadius: 10,
       justifyContent: 'center',
       alignItems: 'center',
       height: 55,
-      marginTop: 15, // Space between buttons
+      marginTop: 15, 
+      shadowColor: '#2980b9',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 5,
+    },
+    editButton: {
+      backgroundColor: '#3498db',  
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: 55,
+      marginTop: 15, 
       shadowColor: '#2980b9',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,

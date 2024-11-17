@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const db = SQLite.openDatabase('auth.db');
 
-// Initialize the database
+
 export const initDatabase = () => {
   return new Promise((resolve, reject) => {
     try {
@@ -18,12 +18,14 @@ export const initDatabase = () => {
               () => {
                 tx.executeSql(
                   `CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,   
+    
                     username TEXT UNIQUE,
                     password TEXT,
                     firstName TEXT,
-                    lastName TEXT,
-                    email TEXT UNIQUE,
+                    lastName TEXT,   
+    
+                    email TEXT UNIQUE, 
                     contactNumber TEXT,
                     address TEXT,
                     profilePicture TEXT
@@ -57,8 +59,46 @@ export const initDatabase = () => {
     }
   });
 };
+export const resetDatabase = () => {
+  return new Promise((resolve, reject) => {
+    try {
+      db.transaction(tx => {
+       
+        tx.executeSql('DROP TABLE IF EXISTS users;', [], () => {
+    
+          tx.executeSql(
+            `CREATE TABLE IF NOT EXISTS users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              username TEXT UNIQUE,
+              password TEXT,
+              firstName TEXT,
+              lastName TEXT,
+              email TEXT UNIQUE,
+              contactNumber TEXT,
+              address TEXT,
+              profilePicture TEXT
+            );`,
+            [],
+            () => {
+              console.log('Database and table reset successfully');
+              AsyncStorage.setItem('dbInitialized', 'false'); 
+              resolve();
+            },
+            (_, error) => {
+              console.error('Error creating table:', error);
+              reject(error);
+            }
+          );
+        });
+      });
+    } catch (error) {
+      console.error('Transaction error:', error);
+      reject(error);
+    }
+  });
+};
 
-// Register a new user
+
 export const registerUser = async (userData) => {
   const { username, password, firstName, lastName, email, contactNumber, address, profilePicture } = userData;
 
@@ -85,7 +125,7 @@ export const registerUser = async (userData) => {
   });
 };
 
-// Login a user
+
 export const loginUser = (username, password) => {
   return new Promise((resolve, reject) => {
     try {
@@ -117,13 +157,13 @@ export const loginUser = (username, password) => {
   });
 };
 
-// Get the logged-in user from AsyncStorage
+
 export const getLoggedInUser = async () => {
   const user = await AsyncStorage.getItem('loggedInUser');
   return user ? JSON.parse(user) : null;
 };
 
-// Get user by username
+
 export const getUserByUsername = (username) => {
   return new Promise((resolve, reject) => {
     try {
@@ -147,7 +187,7 @@ export const getUserByUsername = (username) => {
   });
 };
 
-// Update user profile
+
 export const updateUserProfile = (userData) => {
   const { id, firstName, lastName, email, contactNumber, address, profilePicture } = userData;
 
@@ -174,7 +214,7 @@ export const updateUserProfile = (userData) => {
   });
 };
 
-// Delete user account
+
 export const deleteUserAccount = (id) => {
   return new Promise((resolve, reject) => {
     try {
@@ -199,7 +239,7 @@ export const deleteUserAccount = (id) => {
   });
 };
 
-// Logout user
+
 export const logoutUser = async () => {
   try {
     await AsyncStorage.removeItem('loggedInUser');
@@ -209,7 +249,7 @@ export const logoutUser = async () => {
   }
 };
 
-// Get all users
+
 export const getAllUsers = () => {
   return new Promise((resolve, reject) => {
     try {
